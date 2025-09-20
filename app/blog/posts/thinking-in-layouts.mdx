@@ -4,3 +4,25 @@ publishedAt: '2024-04-08'
 summary: 'When designing user interfaces, developers often have to think from from bits to bytes to React components. But this immense amount of complexity doesn't stop with components. Thinking in layouts proposes adding one more high level concept to make building awesome websites even more fun.'
 ---
 
+Think bigger.
+
+Often, frontend developers think they should create components that are reusable across multiple applications, verticals, or even companies.
+
+But how often are the same components created, used once, tests written - and never used again?
+
+How do we *actually* promote maximum code reuse?
+
+Think in terms of layouts. Layouts can be an entire page, or one part of it. Layouts are composed of components. 
+
+When building a new application, consider the common interaction patterns between verticals.
+
+Two verticals might want a fancy button specific to their application or data types. 
+
+But chances are, they both will want to analyze data in a table. And that table will need to adapt to different screen sizes or browsers. 
+
+Solve that hard problem once, and build two relatively easier to construct buttons. Don't sacrifice time and effort creating one mega button. Its a button.
+
+When you start thinking like this, you'll notice your code starts become much more modular, and you can *actually* reuse the bulk of it.
+
+The other benefit here is that you can always have your layout component accept props for your custom buttons.
+
