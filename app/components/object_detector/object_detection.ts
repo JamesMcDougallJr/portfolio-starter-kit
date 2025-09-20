@@ -1,15 +1,14 @@
+
 import {
   ObjectDetector,
   FilesetResolver,
-  Detection,
-  ObjectDetectionResult
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2";
+  ObjectDetectorResult
+} from "@mediapipe/tasks-vision";
 
 export function runObjectDetections() {
   const demosSection = document.getElementById("demos") as HTMLElement;
 
   let objectDetector: ObjectDetector;
-  let runningMode = "IMAGE";
 
   const initializeObjectDetector = async () => {
     const vision = await FilesetResolver.forVisionTasks(
@@ -21,7 +20,7 @@ export function runObjectDetections() {
         delegate: "GPU"
       },
       scoreThreshold: 0.5,
-      runningMode: runningMode
+      runningMode: "VIDEO"
     });
     demosSection.classList.remove("invisible");
   };
@@ -29,7 +28,7 @@ export function runObjectDetections() {
 
   let video = document.getElementById("webcam");
   const liveView = document.getElementById("liveView");
-  let enableWebcamButton: HTMLButtonElement;
+  let enableWebcamButton: HTMLButtonElement | null;
   // Check if webcam access is supported.
   function hasGetUserMedia() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
@@ -42,8 +41,8 @@ export function runObjectDetections() {
   // If webcam supported, add event listener to button for when user
   // wants to activate it.
   if (hasGetUserMedia()) {
-    enableWebcamButton = document.getElementById("webcamButton");
-    enableWebcamButton.addEventListener("click", enableCam);
+    enableWebcamButton = document.getElementById("webcamButton") as HTMLButtonElement;
+    enableWebcamButton?.addEventListener("click", enableCam);
   } else {
     console.warn("getUserMedia() is not supported by your browser");
   }
@@ -79,10 +78,6 @@ export function runObjectDetections() {
   let lastVideoTime = -1;
   async function predictWebcam() {
     // if image mode is initialized, create a new classifier with video runningMode.
-    if (runningMode === "IMAGE") {
-      runningMode = "VIDEO";
-      await objectDetector.setOptions({ runningMode: "VIDEO" });
-    }
     let startTimeMs = performance.now();
 
     // Detect objects using detectForVideo.
@@ -95,7 +90,7 @@ export function runObjectDetections() {
     window.requestAnimationFrame(predictWebcam);
   }
 
-  function displayVideoDetections(result: ObjectDetectionResult) {
+  function displayVideoDetections(result: ObjectDetectorResult) {
     // Remove any highlighting from previous frame.
     for (let child of children) {
       liveView.removeChild(child);

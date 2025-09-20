@@ -1,7 +1,12 @@
+'use client';
+
+import { useEffect } from "react";
 import { runObjectDetections } from "./object_detection";
 
 export const ObjectDetectionPlayer = () => {
-  runObjectDetections();
+  useEffect(() => {
+    runObjectDetections();
+  }, []);
   return (
     <div id="liveView" className="videoView">
       <button id="webcamButton" className="mdc-button mdc-button--raised">
