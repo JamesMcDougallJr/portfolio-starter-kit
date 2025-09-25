@@ -1,4 +1,3 @@
-
 import {
   ObjectDetector,
   FilesetResolver,
@@ -26,8 +25,10 @@ export function runObjectDetections() {
   };
   initializeObjectDetector();
 
-  let video = document.getElementById("webcam");
+  let video = document.getElementById("webcam") as HTMLVideoElement;
+  if (!video) return;
   const liveView = document.getElementById("liveView");
+  if (!liveView) return;
   let enableWebcamButton: HTMLButtonElement | null;
   // Check if webcam access is supported.
   function hasGetUserMedia() {
@@ -36,7 +37,7 @@ export function runObjectDetections() {
 
   // Keep a reference of all the child elements we create
   // so we can remove them easilly on each render.
-  var children = [];
+  const children: HTMLElement[] = [];
 
   // If webcam supported, add event listener to button for when user
   // wants to activate it.
@@ -55,7 +56,9 @@ export function runObjectDetections() {
     }
 
     // Hide the button.
-    enableWebcamButton.classList.add("removed");
+    if (enableWebcamButton) {
+      enableWebcamButton.classList.add("removed");
+    }
 
     // getUsermedia parameters
     const constraints = {
@@ -80,6 +83,7 @@ export function runObjectDetections() {
     // if image mode is initialized, create a new classifier with video runningMode.
     let startTimeMs = performance.now();
 
+
     // Detect objects using detectForVideo.
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
@@ -93,19 +97,19 @@ export function runObjectDetections() {
   function displayVideoDetections(result: ObjectDetectorResult) {
     // Remove any highlighting from previous frame.
     for (let child of children) {
-      liveView.removeChild(child);
+      liveView?.removeChild(child);
     }
     children.splice(0);
     // Iterate through predictions and draw them to the live view
     for (let detection of result.detections) {
+      if (!detection.boundingBox) continue;
       const p = document.createElement("p");
       p.innerText =
         detection.categories[0].categoryName +
         " - with " +
-        Math.round(parseFloat(detection.categories[0].score) * 100) +
+        Math.round(detection.categories[0].score * 100) +
         "% confidence.";
-      p.style =
-        "left: " +
+      p.setAttribute('style', "left: " +
         (video.offsetWidth -
           detection.boundingBox.width -
           detection.boundingBox.originX) +
@@ -115,11 +119,11 @@ export function runObjectDetections() {
         "px; " +
         "width: " +
         (detection.boundingBox.width - 10) +
-        "px;";
+        "px;");
 
       const highlighter = document.createElement("div");
       highlighter.setAttribute("class", "highlighter");
-      highlighter.style =
+      highlighter.setAttribute('style',
         "left: " +
         (video.offsetWidth -
           detection.boundingBox.width -
@@ -133,10 +137,10 @@ export function runObjectDetections() {
         "px;" +
         "height: " +
         detection.boundingBox.height +
-        "px;";
+        "px;");
 
-      liveView.appendChild(highlighter);
-      liveView.appendChild(p);
+      liveView?.appendChild(highlighter);
+      liveView?.appendChild(p);
 
       // Store drawn objects in memory so they are queued to delete at next call.
       children.push(highlighter);
