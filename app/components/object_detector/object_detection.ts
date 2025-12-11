@@ -4,25 +4,23 @@ import {
   ObjectDetectorResult
 } from "@mediapipe/tasks-vision";
 
-export function runObjectDetections() {
-  const demosSection = document.getElementById("demos") as HTMLElement;
+const initializeObjectDetector = async () => {
+  const vision = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+  );
+  return await ObjectDetector.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
+      delegate: "GPU"
+    },
+    scoreThreshold: 0.5,
+    runningMode: "VIDEO"
+  });
+};
 
-  let objectDetector: ObjectDetector;
+export async function runObjectDetections() {
+  let objectDetector: ObjectDetector = await initializeObjectDetector();
 
-  const initializeObjectDetector = async () => {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-    objectDetector = await ObjectDetector.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
-        delegate: "GPU"
-      },
-      scoreThreshold: 0.5,
-      runningMode: "VIDEO"
-    });
-    demosSection.classList.remove("invisible");
-  };
   initializeObjectDetector();
 
   let video = document.getElementById("webcam") as HTMLVideoElement;

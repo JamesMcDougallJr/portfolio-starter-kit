@@ -63,7 +63,7 @@ export default async function Blog({ params }) {
   }
 
   return (
-    <section>
+    <section className="bg-card border border-slate-200 dark:border-slate-700 rounded-lg p-8 shadow-md">
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -86,15 +86,15 @@ export default async function Blog({ params }) {
           }),
         }}
       />
-      <h1 className="title font-semibold text-2xl tracking-tighter">
+      <h1 className="title font-semibold text-3xl tracking-tighter mb-2 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
         {post.metadata.title}
       </h1>
       <div className="flex justify-between items-center mt-2 mb-8 text-sm">
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           {formatDate(post.metadata.publishedAt)}
         </p>
       </div>
-      <article className="prose">
+      <article className="prose dark:prose-invert max-w-none">
         <CustomMDX source={post.content} />
       </article>
     </section>

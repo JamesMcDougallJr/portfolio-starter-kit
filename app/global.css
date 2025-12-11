@@ -1,32 +1,126 @@
 @import 'tailwindcss';
 
-::selection {
-  background-color: #47a3f3;
-  color: #fefefe;
+/* Blue/Purple Theme Color System */
+:root {
+  /* Primary theme colors */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-accent: #8b5cf6;
+  --color-accent-hover: #7c3aed;
+
+  /* Backgrounds (keep neutral) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-card: #ffffff;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  /* Borders & Shadows */
+  --border-subtle: #e2e8f0;
+  --border-accent: #3b82f6;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-accent: 0 4px 14px 0 rgba(59, 130, 246, 0.25);
+
+  /* Syntax highlighting - blue/purple theme */
+  --sh-class: #3b82f6;
+  --sh-identifier: #334155;
+  --sh-sign: #64748b;
+  --sh-string: #10b981;
+  --sh-keyword: #8b5cf6;
+  --sh-comment: #94a3b8;
+  --sh-jsxliterals: #6366f1;
+  --sh-property: #f59e0b;
+  --sh-entity: #f59e0b;
 }
 
-:root {
-  --sh-class: #2d5e9d;
-  --sh-identifier: #354150;
-  --sh-sign: #8996a3;
-  --sh-string: #007f7a;
-  --sh-keyword: #e02518;
-  --sh-comment: #a19595;
-  --sh-jsxliterals: #6266d1;
-  --sh-property: #e25a1c;
-  --sh-entity: #e25a1c;
+.dark {
+  /* Dark mode theme colors */
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
+  --color-accent: #a78bfa;
+  --color-accent-hover: #8b5cf6;
+
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --border-subtle: #334155;
+  --border-accent: #60a5fa;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+  --shadow-accent: 0 4px 14px 0 rgba(96, 165, 250, 0.4);
+
+  /* Syntax highlighting for dark mode */
+  --sh-class: #60a5fa;
+  --sh-identifier: #f1f5f9;
+  --sh-keyword: #a78bfa;
+  --sh-string: #34d399;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --sh-class: #4c97f8;
-    --sh-identifier: white;
-    --sh-keyword: #f47067;
-    --sh-string: #0fa295;
-  }
   html {
     color-scheme: dark;
   }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-primary-color {
+    color: var(--color-primary);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .bg-card {
+    background-color: var(--bg-card);
+  }
+  .border-accent {
+    border-color: var(--border-accent);
+  }
+  .shadow-accent {
+    box-shadow: var(--shadow-accent);
+  }
+
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-accent);
+  }
+}
+
+/* Update selection color to match theme */
+::selection {
+  background-color: var(--color-primary);
+  color: #fefefe;
 }
 
 html {
@@ -48,7 +142,14 @@ html {
 }
 
 .prose a {
-  @apply underline transition-all decoration-neutral-400 dark:decoration-neutral-600 underline-offset-2 decoration-[0.1em];
+  @apply underline decoration-2 underline-offset-2 transition-all duration-200;
+  color: var(--color-primary);
+  text-decoration-color: var(--color-primary);
+}
+
+.prose a:hover {
+  color: var(--color-accent);
+  text-decoration-color: var(--color-accent);
 }
 
 .prose .anchor:after {
@@ -61,11 +162,15 @@ html {
 }
 
 .prose pre {
-  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-neutral-200 dark:border-neutral-900 py-2 px-3 text-sm;
+  @apply bg-slate-50 dark:bg-slate-900 rounded-lg overflow-x-auto py-2 px-3 text-sm;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
 }
 
 .prose code {
-  @apply px-1 py-0.5 rounded-lg;
+  @apply px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800;
+  border: 1px solid var(--border-accent);
+  opacity: 0.8;
 }
 
 .prose pre code {
@@ -76,6 +181,12 @@ html {
 
 .prose code span {
   @apply font-medium;
+}
+
+.prose blockquote {
+  @apply border-l-4 pl-4 italic;
+  border-color: var(--color-accent);
+  color: var(--text-secondary);
 }
 
 .prose img {

@@ -16,6 +16,7 @@
     "geist": "1.2.2",
     "next": "canary",
     "next-mdx-remote": "^4.4.1",
+    "ol": "^10.6.1",
     "postcss": "^8.4.35",
     "react": "canary",
     "react-dom": "canary",
