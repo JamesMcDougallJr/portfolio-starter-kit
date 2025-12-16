@@ -11,9 +11,6 @@ const navItems = {
   '/map': {
     name: 'map',
   },
-  'https://vercel.com/templates/next.js/portfolio-starter-kit': {
-    name: 'deploy',
-  },
 }
 
 export function Navbar() {

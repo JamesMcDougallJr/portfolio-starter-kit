@@ -13,7 +13,7 @@ import VectorSource from "ol/source/Vector";
 
 export default function Page() {
   const mapRef = useRef<OlMap>();
-  const mapContainerRef = useRef<HTMLElement>();
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Create the marker feature
   const marker = new Feature({
@@ -41,6 +41,8 @@ export default function Page() {
 
   useEffect(() => {
     const createMap = () => {
+      if (!mapContainerRef.current) return;
+
       mapRef.current = new OlMap({
         layers: [
           new TileLayer({
@@ -57,7 +59,7 @@ export default function Page() {
       });
     }
 
-    if (mapContainerRef) createMap();
+    createMap();
 
     return () => {
       if (mapRef.current) {
