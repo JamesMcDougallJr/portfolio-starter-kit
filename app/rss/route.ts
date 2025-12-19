@@ -1,6 +1,9 @@
 import { baseUrl } from 'app/sitemap'
 import { getBlogPosts } from 'app/blog/utils'
 
+// Revalidate RSS feed every hour
+export const revalidate = 3600
+
 export async function GET() {
   let allBlogs = await getBlogPosts()
 
@@ -37,6 +40,7 @@ export async function GET() {
   return new Response(rssFeed, {
     headers: {
       'Content-Type': 'text/xml',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
     },
   })
 }

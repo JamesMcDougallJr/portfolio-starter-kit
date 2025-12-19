@@ -2,6 +2,9 @@ import { getBlogPosts } from 'app/blog/utils'
 
 export const baseUrl = 'https://portfolio-blog-starter.vercel.app'
 
+// Revalidate sitemap once per day
+export const revalidate = 86400
+
 export default async function sitemap() {
   let blogs = getBlogPosts().map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,

@@ -6,6 +6,9 @@ import { Navbar } from './components/nav'
 import Footer from './components/footer'
 import { baseUrl } from './sitemap'
 import { ThemeProvider } from './components/theme-provider'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { ErrorMonitor } from './components/error-monitor'
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -35,13 +38,14 @@ export const metadata: Metadata = {
   },
 }
 
-const cx = (...classes) => classes.filter(Boolean).join(' ')
+const cx = (...classes: (string | boolean | undefined)[]): string =>
+  classes.filter(Boolean).join(' ')
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
-}) {
+}): JSX.Element {
   return (
     <html
       lang="en"
@@ -67,13 +71,25 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors mt-8 lg:mx-auto">
+        <ErrorMonitor />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary-color text-white px-4 py-2 rounded-lg z-50"
+        >
+          Skip to main content
+        </a>
         <ThemeProvider>
-          <main className="flex-auto min-w-0 mt-6 flex flex-col px-2 md:px-0 max-w-4xl mx-auto">
+          <main
+            id="main-content"
+            className="flex-auto min-w-0 mt-6 flex flex-col px-2 md:px-0 max-w-4xl mx-auto"
+          >
             <Navbar />
             {children}
             <Footer />
           </main>
         </ThemeProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

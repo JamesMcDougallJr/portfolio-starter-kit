@@ -11,9 +11,9 @@ import Icon from "ol/style/Icon";
 import VectorLayer from "ol/layer/Vector";
 import VectorSource from "ol/source/Vector";
 
-export default function Page() {
-  const mapRef = useRef<OlMap>();
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+export default function Page(): JSX.Element {
+  const mapRef = useRef<OlMap>()
+  const mapContainerRef = useRef<HTMLDivElement>(null)
 
   // Create the marker feature
   const marker = new Feature({
@@ -86,10 +86,23 @@ export default function Page() {
   return (
     <>
       <section>
-        <h1 className="font-semibold text-2xl mb-8 tracking-tighter">Map</h1>
+        <h1 className="font-semibold text-2xl mb-8 tracking-tighter bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+          Map
+        </h1>
       </section>
-      <button onClick={handleToggleOverlay}>Toggle Overlay</button>
-      <div ref={mapContainerRef} className="h-96" />
+      <div className="space-y-4">
+        <button
+          onClick={handleToggleOverlay}
+          className="px-6 py-3 bg-primary-color hover:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors duration-200 font-medium shadow-md hover:shadow-lg"
+          aria-label="Toggle map overlay"
+        >
+          Toggle Overlay
+        </button>
+        <div
+          ref={mapContainerRef}
+          className="h-96 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md"
+        />
+      </div>
     </>
   )
 }

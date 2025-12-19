@@ -18,15 +18,27 @@ const initializeObjectDetector = async () => {
   });
 };
 
-export async function runObjectDetections() {
-  let objectDetector: ObjectDetector = await initializeObjectDetector();
+export async function runObjectDetections(): Promise<void> {
+  let objectDetector: ObjectDetector | null = null;
 
-  initializeObjectDetector();
+  try {
+    objectDetector = await initializeObjectDetector();
+  } catch (error) {
+    console.error('Failed to initialize object detector:', error);
+    return;
+  }
 
-  let video = document.getElementById("webcam") as HTMLVideoElement;
-  if (!video) return;
+  const video = document.getElementById("webcam") as HTMLVideoElement | null;
+  if (!video) {
+    console.error('Video element not found');
+    return;
+  }
+
   const liveView = document.getElementById("liveView");
-  if (!liveView) return;
+  if (!liveView) {
+    console.error('LiveView element not found');
+    return;
+  }
   let enableWebcamButton: HTMLButtonElement | null;
   // Check if webcam access is supported.
   function hasGetUserMedia() {
@@ -47,9 +59,14 @@ export async function runObjectDetections() {
   }
 
   // Enable the live webcam view and start detection.
-  async function enableCam(event) {
+  async function enableCam(event: MouseEvent): Promise<void> {
     if (!objectDetector) {
       console.log("Wait! objectDetector not loaded yet.");
+      return;
+    }
+
+    if (!video) {
+      console.error('Video element not available');
       return;
     }
 
@@ -64,23 +81,27 @@ export async function runObjectDetections() {
     };
 
     // Activate the webcam stream.
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then(function (stream) {
-        video.srcObject = stream;
-        video.addEventListener("loadeddata", predictWebcam);
-      })
-      .catch((err) => {
-        console.error(err);
-        /* handle the error */
-      });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      video.addEventListener("loadeddata", predictWebcam);
+    } catch (err) {
+      console.error('Webcam access error:', err);
+      // Restore button if camera access fails
+      if (enableWebcamButton) {
+        enableWebcamButton.classList.remove("removed");
+      }
+    }
   }
 
   let lastVideoTime = -1;
-  async function predictWebcam() {
-    // if image mode is initialized, create a new classifier with video runningMode.
-    let startTimeMs = performance.now();
+  function predictWebcam(): void {
+    if (!video || !objectDetector) {
+      return;
+    }
 
+    // if image mode is initialized, create a new classifier with video runningMode.
+    const startTimeMs = performance.now();
 
     // Detect objects using detectForVideo.
     if (video.currentTime !== lastVideoTime) {
@@ -93,19 +114,23 @@ export async function runObjectDetections() {
   }
 
   function displayVideoDetections(result: ObjectDetectorResult) {
+    if (!video || !liveView) return;
+
     // Remove any highlighting from previous frame.
     for (let child of children) {
-      liveView?.removeChild(child);
+      liveView.removeChild(child);
     }
     children.splice(0);
     // Iterate through predictions and draw them to the live view
     for (let detection of result.detections) {
-      if (!detection.boundingBox) continue;
+      if (!detection.boundingBox || !detection.categories[0]) continue;
+
+      const category = detection.categories[0];
       const p = document.createElement("p");
       p.innerText =
-        detection.categories[0].categoryName +
+        category.categoryName +
         " - with " +
-        Math.round(detection.categories[0].score * 100) +
+        Math.round(category.score * 100) +
         "% confidence.";
       p.setAttribute('style', "left: " +
         (video.offsetWidth -
@@ -137,8 +162,8 @@ export async function runObjectDetections() {
         detection.boundingBox.height +
         "px;");
 
-      liveView?.appendChild(highlighter);
-      liveView?.appendChild(p);
+      liveView.appendChild(highlighter);
+      liveView.appendChild(p);
 
       // Store drawn objects in memory so they are queued to delete at next call.
       children.push(highlighter);

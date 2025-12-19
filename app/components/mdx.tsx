@@ -4,7 +4,12 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import { highlight } from 'sugar-high'
 import React from 'react'
 
-function Table({ data }) {
+interface TableData {
+  headers: string[]
+  rows: string[][]
+}
+
+function Table({ data }: { data: TableData }): JSX.Element {
   let headers = data.headers.map((header, index) => (
     <th key={index}>{header}</th>
   ))
@@ -26,8 +31,14 @@ function Table({ data }) {
   )
 }
 
-function CustomLink(props) {
-  let href = props.href
+interface CustomLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  href?: string
+}
+
+function CustomLink({ href, ...props }: CustomLinkProps): JSX.Element {
+  if (!href) {
+    return <a {...props} />
+  }
 
   if (href.startsWith('/')) {
     return (
@@ -38,22 +49,34 @@ function CustomLink(props) {
   }
 
   if (href.startsWith('#')) {
-    return <a {...props} />
+    return <a href={href} {...props} />
   }
 
-  return <a target="_blank" rel="noopener noreferrer" {...props} />
+  return <a href={href} target="_blank" rel="noopener noreferrer" {...props} />
 }
 
-function RoundedImage(props) {
-  return <Image alt={props.alt} className="rounded-lg" {...props} />
+interface RoundedImageProps {
+  src: string
+  alt: string
+  width?: number
+  height?: number
 }
 
-function Code({ children, ...props }) {
-  let codeHTML = highlight(children)
+function RoundedImage(props: RoundedImageProps): JSX.Element {
+  return <Image className="rounded-lg" {...props} />
+}
+
+interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+  children?: React.ReactNode
+}
+
+function Code({ children, ...props }: CodeProps): JSX.Element {
+  const codeString = String(children || '')
+  const codeHTML = highlight(codeString)
   return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />
 }
 
-function slugify(str) {
+function slugify(str: string): string {
   return str
     .toString()
     .toLowerCase()
@@ -64,9 +87,9 @@ function slugify(str) {
     .replace(/\-\-+/g, '-') // Replace multiple - with single -
 }
 
-function createHeading(level) {
-  const Heading = ({ children }) => {
-    let slug = slugify(children)
+function createHeading(level: 1 | 2 | 3 | 4 | 5 | 6) {
+  const Heading = ({ children }: { children?: React.ReactNode }): JSX.Element => {
+    const slug = slugify(String(children || ''))
     return React.createElement(
       `h${level}`,
       { id: slug },
@@ -86,7 +109,7 @@ function createHeading(level) {
   return Heading
 }
 
-let components = {
+const components = {
   h1: createHeading(1),
   h2: createHeading(2),
   h3: createHeading(3),
@@ -99,7 +122,12 @@ let components = {
   Table,
 }
 
-export function CustomMDX(props) {
+interface CustomMDXProps {
+  source: string
+  components?: Record<string, React.ComponentType<any>>
+}
+
+export function CustomMDX(props: CustomMDXProps): JSX.Element {
   return (
     <MDXRemote
       {...props}
