@@ -1,17 +1,20 @@
-import { getBlogPosts } from 'app/blog/utils'
+import { sanityFetch } from '@/sanity/sanity.client'
+import { postsQuery } from '@/sanity/lib/queries'
+import type { PostListItem } from '@/sanity/lib/types'
 
-export const baseUrl = 'https://portfolio-blog-starter.vercel.app'
+export const baseUrl = 'https://jamesmcdougalljr.vercel.app'
 
-// Revalidate sitemap once per day
 export const revalidate = 86400
 
 export default async function sitemap() {
-  let blogs = getBlogPosts().map((post) => ({
-    url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: post.metadata.publishedAt,
+  const posts = await sanityFetch<PostListItem[]>(postsQuery)
+
+  const blogs = (posts ?? []).map((post) => ({
+    url: `${baseUrl}/blog/${post.slug.current}`,
+    lastModified: post.publishedAt,
   }))
 
-  let routes = ['', '/blog', '/map'].map((route) => ({
+  const routes = ['', '/blog', '/map'].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date().toISOString().split('T')[0],
   }))

@@ -41,11 +41,10 @@ export function Navbar(): JSX.Element {
                 <Link
                   key={path}
                   href={path}
-                  className={`transition-all hover:text-primary-color hover:scale-105 duration-200 flex align-middle relative py-1 px-2 m-1 ${
-                    active
-                      ? 'text-primary-color font-medium'
-                      : 'text-slate-600 dark:text-slate-400'
-                  }`}
+                  className={`transition-all hover:text-primary-color hover:scale-105 duration-200 flex align-middle relative py-1 px-2 m-1 ${active
+                    ? 'text-primary-color font-medium'
+                    : 'text-slate-600 dark:text-slate-400'
+                    }`}
                   aria-current={active ? 'page' : undefined}
                   role="listitem"
                 >

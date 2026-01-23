@@ -30,7 +30,15 @@ export default function Page(): JSX.Element {
           <h2 className="text-2xl font-semibold mb-6 text-slate-900 dark:text-slate-100">
             Recent Posts
           </h2>
-          <BlogPosts />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-8">
+                <LoadingSpinner size="md" />
+              </div>
+            }
+          >
+            <BlogPosts />
+          </Suspense>
         </div>
       </section>
 

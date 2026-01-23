@@ -4,22 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js portfolio and blog site for James McDougall. It's built on the Next.js App Router with MDX blog support, featuring interactive demos including object detection and mapping functionality.
+This is a Next.js portfolio and blog site for James McDougall. It's built on the Next.js App Router with Sanity CMS for content management, featuring interactive demos including object detection and mapping functionality.
 
 ## Development Commands
 
 ```bash
-# Install dependencies (uses pnpm)
-pnpm install
+# Install dependencies
+npm install
 
 # Run development server (default: http://localhost:3000)
-pnpm dev
+npm run dev
 
 # Build for production
-pnpm build
+npm run build
 
 # Start production server
-pnpm start
+npm start
+
+# Deploy Sanity schema changes
+npx sanity@latest schema deploy
 ```
 
 ## Architecture
@@ -27,25 +30,25 @@ pnpm start
 ### Framework & Routing
 - **Next.js App Router** (canary version): Uses the `app/` directory structure
 - **React canary**: Bleeding-edge React features
-- **TypeScript**: Configured with `strict: false` but `strictNullChecks: true`
+- **TypeScript**: Strict mode enabled with `noImplicitAny` and `noUncheckedIndexedAccess`
 
-### Blog System
-- **Content Location**: Blog posts live in `app/blog/posts/` as `.mdx` files
-- **Frontmatter**: Each MDX file has YAML frontmatter with `title`, `publishedAt`, `summary`, and optional `image`
-- **Rendering**: Uses `next-mdx-remote` for server-side MDX rendering with custom components
-- **Utilities**: `app/blog/utils.ts` contains:
-  - `getBlogPosts()`: Reads and parses all MDX files from `app/blog/posts/`
-  - `formatDate()`: Formats dates with relative time (e.g., "2mo ago")
-- **Dynamic Routes**: `app/blog/[slug]/page.tsx` generates static pages for each blog post
+### Blog System (Sanity CMS)
+- **Content Management**: Blog posts are managed via Sanity CMS
+- **Sanity Studio**: Embedded at `/studio` route for content editing
+- **Schema**: Defined in `sanity/schemas/post.ts` with fields:
+  - `title`, `slug`, `publishedAt`, `summary`, `image`, `body` (Portable Text)
+- **Queries**: GROQ queries in `sanity/lib/queries.ts`
+- **Types**: TypeScript interfaces in `sanity/lib/types.ts`
+- **Client**: `sanity/sanity.client.ts` - Sanity client with graceful fallback
+- **Rendering**: `app/components/portable-text.tsx` - Renders Sanity Portable Text
+- **Dynamic Routes**: `app/blog/[slug]/page.tsx` generates pages for each blog post
 - **RSS Feed**: Available at `/rss` route via `app/rss/route.ts`
 
-### MDX Components
-The `CustomMDX` component in `app/components/mdx.tsx` provides custom renderers:
-- Auto-linking headings with slugified IDs
-- Syntax highlighting via `sugar-high`
-- Custom link handling (internal vs external)
-- Rounded images via Next.js Image component
-- Custom table rendering
+### Sanity Configuration
+- **Project ID**: Stored in `NEXT_PUBLIC_SANITY_PROJECT_ID` env variable
+- **Dataset**: Stored in `NEXT_PUBLIC_SANITY_DATASET` (default: "production")
+- **Config**: `sanity.config.ts` - Main Sanity configuration
+- **CLI Config**: `sanity.cli.ts` - For running Sanity CLI commands
 
 ### SEO & Metadata
 - **Sitemap**: Auto-generated at `/sitemap.xml` from `app/sitemap.ts`, includes all blog posts and routes
@@ -76,14 +79,19 @@ The `CustomMDX` component in `app/components/mdx.tsx` provides custom renderers:
 - **Layout**: `app/layout.tsx` - Root layout with metadata, fonts, nav, and footer
 - **Home Page**: `app/page.tsx` - Shows hero title, blog posts, and object detection demo
 - **Navigation**: `app/components/nav.tsx`
-- **Blog Utilities**: `app/blog/utils.ts` - Core blog data fetching and formatting
-- **MDX Rendering**: `app/components/mdx.tsx` - Custom MDX component overrides
+- **Blog Posts Component**: `app/components/posts.tsx` - Fetches and displays blog posts from Sanity
+- **Portable Text**: `app/components/portable-text.tsx` - Renders Sanity rich text
+- **Sanity Client**: `sanity/sanity.client.ts` - Sanity client configuration
+- **Sanity Queries**: `sanity/lib/queries.ts` - GROQ queries for fetching content
+- **Sanity Schema**: `sanity/schemas/post.ts` - Blog post schema definition
+- **Sanity Config**: `sanity.config.ts` - Main Sanity Studio configuration
 - **Global Styles**: `app/global.css`
 
 ## Important Notes
 
-- The site uses **pnpm** as the package manager (confirmed by `pnpm-lock.yaml`)
+- The site uses **npm** as the package manager
 - **Node Version**: Locked to a specific version via `.nvmrc`
 - **Base URL**: When deploying, update `baseUrl` in `app/sitemap.ts` to the production domain
-- **Blog Posts**: To add a new post, create an `.mdx` file in `app/blog/posts/` with proper frontmatter
-- **TypeScript**: Not all type errors are caught due to `strict: false`, but null checks are enforced
+- **Blog Posts**: Managed via Sanity Studio at `/studio` - create and publish posts there
+- **Environment Variables**: Requires `NEXT_PUBLIC_SANITY_PROJECT_ID` and `NEXT_PUBLIC_SANITY_DATASET` in `.env.local`
+- **Schema Deployment**: After changing schemas in `sanity/schemas/`, run `npx sanity@latest schema deploy`

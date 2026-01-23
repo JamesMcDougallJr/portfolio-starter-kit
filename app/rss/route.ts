@@ -1,28 +1,21 @@
 import { baseUrl } from 'app/sitemap'
-import { getBlogPosts } from 'app/blog/utils'
+import { sanityFetch } from '@/sanity/sanity.client'
+import { postsQuery } from '@/sanity/lib/queries'
+import type { PostListItem } from '@/sanity/lib/types'
 
-// Revalidate RSS feed every hour
 export const revalidate = 3600
 
 export async function GET() {
-  let allBlogs = await getBlogPosts()
+  const posts = await sanityFetch<PostListItem[]>(postsQuery)
 
-  const itemsXml = allBlogs
-    .sort((a, b) => {
-      if (new Date(a.metadata.publishedAt) > new Date(b.metadata.publishedAt)) {
-        return -1
-      }
-      return 1
-    })
+  const itemsXml = (posts ?? [])
     .map(
       (post) =>
         `<item>
-          <title>${post.metadata.title}</title>
-          <link>${baseUrl}/blog/${post.slug}</link>
-          <description>${post.metadata.summary || ''}</description>
-          <pubDate>${new Date(
-            post.metadata.publishedAt
-          ).toUTCString()}</pubDate>
+          <title>${escapeXml(post.title)}</title>
+          <link>${baseUrl}/blog/${post.slug.current}</link>
+          <description>${escapeXml(post.summary ?? '')}</description>
+          <pubDate>${new Date(post.publishedAt).toUTCString()}</pubDate>
         </item>`
     )
     .join('\n')
@@ -30,9 +23,9 @@ export async function GET() {
   const rssFeed = `<?xml version="1.0" encoding="UTF-8" ?>
   <rss version="2.0">
     <channel>
-        <title>My Portfolio</title>
+        <title>James McDougall</title>
         <link>${baseUrl}</link>
-        <description>This is my portfolio RSS feed</description>
+        <description>James McDougall's blog RSS feed</description>
         ${itemsXml}
     </channel>
   </rss>`
@@ -43,4 +36,13 @@ export async function GET() {
       'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
     },
   })
+}
+
+function escapeXml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
 }
