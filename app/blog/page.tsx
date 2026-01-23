@@ -1,5 +1,7 @@
 import { BlogPosts } from 'app/components/posts'
 
+export const revalidate = 3600 // Revalidate every hour
+
 export const metadata = {
   title: 'Articles',
   description: 'Read my blog.',
