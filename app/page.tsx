@@ -1,6 +1,8 @@
 import { BlogPosts } from 'app/components/posts'
 import { Suspense, lazy } from 'react'
 import { LoadingSpinner } from './components/loading-spinner'
+import { siteConfig } from './lib/seo'
+import { baseUrl } from './sitemap'
 
 const ObjectDetectionPlayer = lazy(
   () =>
@@ -14,12 +16,33 @@ const ObjectDetectionPlayer = lazy(
 export default function Page(): JSX.Element {
   return (
     <>
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            name: siteConfig.name,
+            url: baseUrl,
+            jobTitle: 'Software Engineer',
+            description: `Software engineer based in ${siteConfig.location.city}, ${siteConfig.location.region}.`,
+            sameAs: [siteConfig.social.linkedin, siteConfig.social.github],
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: siteConfig.location.city,
+              addressRegion: siteConfig.location.region,
+              addressCountry: siteConfig.location.country,
+            },
+          }),
+        }}
+      />
       <section className="mb-12">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
           James McDougall
         </h1>
         <p className="text-xl text-slate-600 dark:text-slate-400">
-          Software Engineer & Problem Solver
+          Software Engineer in Salt Lake City, Utah
         </p>
       </section>
 

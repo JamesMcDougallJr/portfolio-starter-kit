@@ -3,6 +3,7 @@ import { sanityFetch, isSanityConfigured } from '@/sanity/sanity.client'
 import { postBySlugQuery, postSlugsQuery } from '@/sanity/lib/queries'
 import { BlogPortableText } from '@/app/components/portable-text'
 import { baseUrl } from 'app/sitemap'
+import { siteConfig } from '@/app/lib/seo'
 import type { Metadata } from 'next'
 import type { Post } from '@/sanity/lib/types'
 
@@ -86,7 +87,9 @@ export default async function Blog({
             url: `${baseUrl}/blog/${post.slug.current}`,
             author: {
               '@type': 'Person',
-              name: 'James McDougall',
+              name: siteConfig.name,
+              url: baseUrl,
+              sameAs: [siteConfig.social.linkedin, siteConfig.social.github],
             },
           }),
         }}
