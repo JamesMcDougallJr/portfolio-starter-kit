@@ -8,6 +8,11 @@
   --color-accent: #8b5cf6;
   --color-accent-hover: #7c3aed;
 
+  /* Flame accent colors */
+  --color-flame: #f97316;
+  --color-flame-hover: #ea580c;
+  --color-ember: #fbbf24;
+
   /* Backgrounds (keep neutral) */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
@@ -45,6 +50,11 @@
   --color-accent: #a78bfa;
   --color-accent-hover: #8b5cf6;
 
+  /* Dark mode flame colors */
+  --color-flame: #fb923c;
+  --color-flame-hover: #f97316;
+  --color-ember: #fcd34d;
+
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: #1e293b;
@@ -81,6 +91,9 @@
   .text-accent {
     color: var(--color-accent);
   }
+  .text-flame {
+    color: var(--color-flame);
+  }
   .bg-card {
     background-color: var(--bg-card);
   }
@@ -89,6 +102,16 @@
   }
   .shadow-accent {
     box-shadow: var(--shadow-accent);
+  }
+
+  /* Flame glow effect */
+  .flame-glow {
+    filter: drop-shadow(0 0 8px var(--color-flame));
+    transition: filter 0.3s ease;
+  }
+
+  .flame-glow:hover {
+    filter: drop-shadow(0 0 12px var(--color-flame)) drop-shadow(0 0 20px var(--color-ember));
   }
 
   /* Animations */
@@ -104,6 +127,46 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  /* Flame flicker animation */
+  .animate-flicker {
+    animation: flicker 2s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    25% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(0.98);
+    }
+    75% {
+      opacity: 0.95;
+      transform: scale(1.01);
+    }
+  }
+
+  /* Flame pulse animation */
+  .animate-flame-pulse {
+    animation: flamePulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes flamePulse {
+    0%, 100% {
+      opacity: 0.8;
+      filter: drop-shadow(0 0 4px var(--color-flame));
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 12px var(--color-flame)) drop-shadow(0 0 20px var(--color-ember));
     }
   }
 
