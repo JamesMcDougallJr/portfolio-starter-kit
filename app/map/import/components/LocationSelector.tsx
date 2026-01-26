@@ -11,12 +11,29 @@ interface LocationSelectorProps {
   disabled?: boolean;
 }
 
+/**
+ * Parses a combined coordinate string from Google Maps or similar sources.
+ * Accepts formats like "41.6181, -112.5477" or "41.6181 -112.5477"
+ */
+function parseCoordinates(input: string): { lat: number; lng: number } | null {
+  // Match "lat, lng" or "lat lng" format (with optional whitespace)
+  const match = input.trim().match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
+  if (!match || !match[1] || !match[2]) return null;
+
+  const lat = parseFloat(match[1]);
+  const lng = parseFloat(match[2]);
+
+  if (isNaN(lat) || isNaN(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+  return { lat, lng };
+}
+
 export function LocationSelector({ value, onChange, onCreateNew, disabled }: LocationSelectorProps) {
   const [locations, setLocations] = useState<HistoricalLocation[]>([]);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newLat, setNewLat] = useState('');
-  const [newLng, setNewLng] = useState('');
+  const [coordsInput, setCoordsInput] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,28 +54,20 @@ export function LocationSelector({ value, onChange, onCreateNew, disabled }: Loc
   const handleCreateLocation = () => {
     setError(null);
 
-    const lat = parseFloat(newLat);
-    const lng = parseFloat(newLng);
-
     if (!newName.trim()) {
       setError('Please enter a location name');
       return;
     }
 
-    if (isNaN(lat) || isNaN(lng)) {
-      setError('Please enter valid coordinates');
+    const coords = parseCoordinates(coordsInput);
+    if (!coords) {
+      setError('Invalid coordinates. Use format: 41.6181, -112.5477');
       return;
     }
 
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      setError('Coordinates out of range (lat: -90 to 90, lng: -180 to 180)');
-      return;
-    }
-
-    onCreateNew(newName.trim(), [lng, lat]);
+    onCreateNew(newName.trim(), [coords.lng, coords.lat]);
     setNewName('');
-    setNewLat('');
-    setNewLng('');
+    setCoordsInput('');
     setShowNewForm(false);
     setError(null);
 
@@ -105,35 +114,21 @@ export function LocationSelector({ value, onChange, onCreateNew, disabled }: Loc
               className="w-full px-3 py-2 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="new-location-lat" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Latitude
-              </label>
-              <input
-                id="new-location-lat"
-                type="number"
-                step="any"
-                value={newLat}
-                onChange={(e) => setNewLat(e.target.value)}
-                placeholder="e.g., 41.6181"
-                className="w-full px-3 py-2 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
-              />
-            </div>
-            <div>
-              <label htmlFor="new-location-lng" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Longitude
-              </label>
-              <input
-                id="new-location-lng"
-                type="number"
-                step="any"
-                value={newLng}
-                onChange={(e) => setNewLng(e.target.value)}
-                placeholder="e.g., -112.5477"
-                className="w-full px-3 py-2 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
-              />
-            </div>
+          <div>
+            <label htmlFor="new-location-coords" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Coordinates
+            </label>
+            <input
+              id="new-location-coords"
+              type="text"
+              value={coordsInput}
+              onChange={(e) => setCoordsInput(e.target.value)}
+              placeholder="e.g., 41.6181, -112.5477 (paste from Google Maps)"
+              className="w-full px-3 py-2 rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+            />
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+              Paste coordinates directly from Google Maps
+            </p>
           </div>
           <div className="flex gap-2">
             <button

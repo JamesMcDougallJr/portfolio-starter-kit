@@ -31,7 +31,8 @@
     "sanity": "^4.22.0",
     "styled-components": "^6.3.8",
     "tailwindcss": "4.0.0-alpha.13",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "unpdf": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.9",
