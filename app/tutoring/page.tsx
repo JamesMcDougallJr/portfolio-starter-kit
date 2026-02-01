@@ -1,7 +1,7 @@
 export const metadata = {
   title: 'Tutoring',
   description:
-    'Private tutoring services in Computer Science, History, and English.',
+    'Private and group tutoring services in Computer Science, History, and English.',
 }
 
 const subjects = [
@@ -9,7 +9,6 @@ const subjects = [
     name: 'Computer Science',
     description:
       'Build a strong foundation in programming and software development. I focus on practical, hands-on learning with real-world projects.',
-    levels: ['Beginner', 'Intermediate', 'Advanced'],
     topics: [
       'Programming fundamentals',
       'Data structures & algorithms',
@@ -22,7 +21,6 @@ const subjects = [
     name: 'History',
     description:
       'Develop critical thinking and analytical skills through the study of historical events, movements, and primary sources.',
-    levels: ['Beginner', 'Intermediate', 'Advanced'],
     topics: [
       'World history',
       'US history',
@@ -35,7 +33,6 @@ const subjects = [
     name: 'English',
     description:
       'Strengthen your writing and communication skills. From grammar basics to advanced literary analysis and persuasive writing.',
-    levels: ['Beginner', 'Intermediate', 'Advanced'],
     topics: [
       'Essay writing',
       'Reading comprehension',
@@ -46,21 +43,12 @@ const subjects = [
   },
 ]
 
-function LevelBadge({ level }: { level: string }) {
-  return (
-    <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-      {level}
-    </span>
-  )
-}
-
 function SubjectCard({
   subject,
 }: {
   subject: {
     name: string
     description: string
-    levels: string[]
     topics: string[]
   }
 }) {
@@ -72,17 +60,6 @@ function SubjectCard({
       <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
         {subject.description}
       </p>
-
-      <div className="mb-4">
-        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-500 mb-2">
-          Skill Levels
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {subject.levels.map((level) => (
-            <LevelBadge key={level} level={level} />
-          ))}
-        </div>
-      </div>
 
       <div>
         <h3 className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-500 mb-2">
@@ -111,11 +88,25 @@ export default function Page() {
         Tutoring Services
       </h1>
 
-      <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-2xl">
-        I offer personalized one-on-one tutoring sessions tailored to your
-        learning goals. Whether you&apos;re preparing for exams, building new
-        skills, or need help with coursework, I&apos;m here to help you succeed.
-      </p>
+      <div className="text-slate-600 dark:text-slate-400 mb-8 max-w-2xl space-y-4">
+        <p>
+          I offer one-on-one and group tutoring sessions in Computer Science,
+          History, and English for students from middle school through college.
+          My approach is grounded in clear expectations and rigorous
+          standards—not lowering the bar, but giving students the support they
+          need to meet it.
+        </p>
+        <p>
+          Whether you're mastering programming fundamentals, analyzing
+          historical events, or crafting compelling essays, I focus on
+          developing the critical thinking and discipline that transfer across
+          every area of life. In an era where AI is reshaping how we work and
+          learn, students need to understand these tools thoughtfully—not just
+          how to use them, but when to use them, and how to wield them
+          responsibly. My goal is to prepare students to engage with the world
+          as capable, ethical citizens who can make a meaningful impact.
+        </p>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10">
         {subjects.map((subject) => (
