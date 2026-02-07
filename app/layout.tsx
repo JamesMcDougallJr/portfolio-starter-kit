@@ -2,7 +2,7 @@ import './global.css'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Navbar } from './components/nav'
-import Footer from './components/footer'
+import { ConditionalFooter } from './components/conditional-footer'
 import { ThemeProvider } from './components/theme-provider'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -58,7 +58,7 @@ export default function RootLayout({
           >
             <Navbar />
             {children}
-            <Footer />
+            <ConditionalFooter />
           </main>
         </ThemeProvider>
         <Analytics />

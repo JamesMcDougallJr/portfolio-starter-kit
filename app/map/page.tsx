@@ -3,7 +3,7 @@
 import { Feature, Map as OlMap, View, Overlay } from 'ol';
 import XYZ from 'ol/source/XYZ';
 import TileLayer from 'ol/layer/Tile';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { fromLonLat } from 'ol/proj';
 import Point from 'ol/geom/Point';
 import Style from 'ol/style/Style';
@@ -14,6 +14,7 @@ import type { HistoricalLocation } from './types';
 import { getLocations } from './utils/storage';
 import { MapPopup } from './components/MapPopup';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 // Pin icon SVG as data URL for historical events (module scope - created once)
 const EVENT_PIN_SVG = `data:image/svg+xml,${encodeURIComponent(`
@@ -42,7 +43,7 @@ const homeVectorLayer = new VectorLayer({
 });
 homeVectorLayer.set('layerId', 'home');
 
-export default function Page(): JSX.Element {
+function MapContent(): JSX.Element {
   const mapRef = useRef<OlMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -54,17 +55,34 @@ export default function Page(): JSX.Element {
   const [locations, setLocations] = useState<HistoricalLocation[]>([]);
   const [hoveredLocation, setHoveredLocation] = useState<HistoricalLocation | null>(null);
   const [showHomeMarker, setShowHomeMarker] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+  const isPinnedRef = useRef(false);
 
-  // Keep ref in sync with state to avoid stale closures in event handlers
+  // Get search params to detect navigation from import page
+  const searchParams = useSearchParams();
+  const refreshKey = searchParams.get('t');
+
+  // Keep refs in sync with state to avoid stale closures in event handlers
   useEffect(() => {
     hoveredLocationIdRef.current = hoveredLocation?.id ?? null;
   }, [hoveredLocation]);
 
-  // Load locations from localStorage
+  useEffect(() => {
+    isPinnedRef.current = isPinned;
+  }, [isPinned]);
+
+  // Notify layout of fullscreen changes
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('map-fullscreen-change', { detail: isFullscreen }));
+  }, [isFullscreen]);
+
+  // Load locations from localStorage on mount and when refreshKey changes (from import navigation)
   useEffect(() => {
     const loadedLocations = getLocations();
+    console.log('[Map] Loading locations, refreshKey:', refreshKey, 'found:', loadedLocations.length);
     setLocations(loadedLocations);
-  }, []);
+  }, [refreshKey]);
 
   // Create map and event features
   useEffect(() => {
@@ -144,6 +162,12 @@ export default function Page(): JSX.Element {
         layerFilter: (layer) => layer.get('layerId') === 'events',
       });
 
+      // If popup is pinned, don't change it on hover - just update cursor
+      if (isPinnedRef.current) {
+        map.getTargetElement().style.cursor = feature ? 'pointer' : '';
+        return;
+      }
+
       if (feature) {
         const locationData = feature.get('locationData') as HistoricalLocation;
         // Use ref instead of state to avoid stale closure
@@ -160,6 +184,31 @@ export default function Page(): JSX.Element {
           overlay.setPosition(undefined);
         }, 300);
         map.getTargetElement().style.cursor = '';
+      }
+    });
+
+    // Handle click for pinning popups
+    map.on('click', (evt) => {
+      const pixel = map.getEventPixel(evt.originalEvent);
+      const feature = map.forEachFeatureAtPixel(pixel, (f) => f, {
+        layerFilter: (layer) => layer.get('layerId') === 'events',
+      });
+
+      if (feature) {
+        const locationData = feature.get('locationData') as HistoricalLocation;
+        if (locationData) {
+          setHoveredLocation(locationData);
+          setIsPinned(true);
+          const coords = fromLonLat(locationData.coordinates);
+          overlay.setPosition(coords);
+        }
+      } else {
+        // Clicked on empty area - unpin and close popup
+        if (isPinnedRef.current) {
+          setIsPinned(false);
+          setHoveredLocation(null);
+          overlay.setPosition(undefined);
+        }
       }
     });
 
@@ -180,15 +229,19 @@ export default function Page(): JSX.Element {
   }, []);
 
   const handlePopupMouseLeave = useCallback(() => {
+    // Don't hide popup on mouse leave if it's pinned
+    if (isPinned) return;
+
     hoverTimeoutRef.current = setTimeout(() => {
       setHoveredLocation(null);
       overlayRef.current?.setPosition(undefined);
     }, 300);
-  }, []);
+  }, [isPinned]);
 
   // Close popup handler
   const handleClosePopup = useCallback(() => {
     setHoveredLocation(null);
+    setIsPinned(false);
     overlayRef.current?.setPosition(undefined);
   }, []);
 
@@ -249,58 +302,82 @@ export default function Page(): JSX.Element {
   };
 
   return (
-    <>
-      <section>
-        <h1 className="font-semibold text-2xl mb-8 tracking-tighter bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-          Historical Map
-        </h1>
-      </section>
-      <div className="space-y-4">
-        {/* Controls */}
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleToggleHomeOverlay}
-            className="px-4 py-2 bg-primary-color hover:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
-            aria-label="Toggle home marker"
-          >
-            {showHomeMarker ? 'Hide' : 'Show'} Home
-          </button>
-          <button
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-neutral-200 hover:bg-neutral-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 text-neutral-800 dark:text-neutral-200 rounded-lg transition-colors text-sm font-medium"
-            aria-label="Refresh map data"
-          >
-            Refresh
-          </button>
-          <Link
-            href="/map/import"
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md hover:shadow-lg"
-          >
-            Import Events
-          </Link>
-        </div>
+    <div className="relative h-full w-full">
+      {/* Floating Controls - Top Left */}
+      <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-2">
+        <button
+          onClick={handleToggleHomeOverlay}
+          className="px-4 py-2 bg-primary-color hover:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg hover:shadow-xl backdrop-blur-sm"
+          aria-label="Toggle home marker"
+        >
+          {showHomeMarker ? 'Hide' : 'Show'} Home
+        </button>
+        <button
+          onClick={handleRefresh}
+          className="px-4 py-2 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 text-neutral-800 dark:text-neutral-200 rounded-lg transition-colors text-sm font-medium shadow-lg hover:shadow-xl backdrop-blur-sm"
+          aria-label="Refresh map data"
+        >
+          Refresh
+        </button>
+        <Link
+          href="/map/import"
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-lg hover:shadow-xl backdrop-blur-sm"
+        >
+          Import Events
+        </Link>
+      </div>
 
-        {/* Stats */}
-        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+      {/* Stats Overlay & Fullscreen Button - Top Right */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <div className="bg-black/60 backdrop-blur-sm px-3 py-2 rounded-lg text-sm text-white shadow-lg">
           {locations.length} location{locations.length !== 1 ? 's' : ''},{' '}
           {locations.reduce((sum, loc) => sum + loc.events.length, 0)} total events
         </div>
-
-        {/* Map Container */}
-        <div
-          ref={mapContainerRef}
-          className="h-96 rounded-lg border border-slate-200 dark:border-slate-700 shadow-md"
-        />
-
-        {/* Popup Container (positioned by OpenLayers Overlay) */}
-        <div
-          ref={popupRef}
-          onMouseEnter={handlePopupMouseEnter}
-          onMouseLeave={handlePopupMouseLeave}
+        <button
+          onClick={() => setIsFullscreen(!isFullscreen)}
+          className="p-2 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg text-white shadow-lg transition-colors"
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
         >
-          <MapPopup location={hoveredLocation} onClose={handleClosePopup} />
-        </div>
+          {isFullscreen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 14 10 14 10 20" />
+              <polyline points="20 10 14 10 14 4" />
+              <line x1="14" y1="10" x2="21" y2="3" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            </svg>
+          )}
+        </button>
       </div>
-    </>
+
+      {/* Full-size Map Container */}
+      <div
+        ref={mapContainerRef}
+        className="h-full w-full"
+      />
+
+      {/* Popup Container (positioned by OpenLayers Overlay) */}
+      <div
+        ref={popupRef}
+        onMouseEnter={handlePopupMouseEnter}
+        onMouseLeave={handlePopupMouseLeave}
+      >
+        <MapPopup location={hoveredLocation} onClose={handleClosePopup} />
+      </div>
+    </div>
+  );
+}
+
+export default function Page(): JSX.Element {
+  return (
+    <Suspense fallback={<div>Loading map...</div>}>
+      <MapContent />
+    </Suspense>
   );
 }

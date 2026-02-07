@@ -145,8 +145,8 @@ export default function ImportPage() {
 
     addEventsToLocation(locationId, historicalEvents);
 
-    // Navigate to map
-    router.push('/map');
+    // Navigate to map with refresh key to trigger data reload
+    router.push(`/map?t=${Date.now()}`);
   };
 
   return (

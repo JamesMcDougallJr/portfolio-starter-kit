@@ -5,7 +5,7 @@ export const siteConfig = {
   name: 'James McDougall',
   title: 'James McDougall',
   description:
-    'James McDougall is a software engineer based in Salt Lake City, Utah. Exploring web development, AI, and creative problem solving.',
+    'James McDougall is a software engineer in the defense industry, building AI-powered solutions in Utah. Helping businesses integrate AI into their workflows and preparing students with skills at the intersection of language, history, and technology.',
   url: baseUrl,
   location: {
     city: 'Salt Lake City',
@@ -28,7 +28,7 @@ export const defaultMetadata: Metadata = {
   openGraph: {
     title: siteConfig.name,
     description:
-      'Software engineer based in Salt Lake City, Utah. Building web applications and exploring AI.',
+      'Software engineer building AI for defense, business, and education in Utah.',
     url: siteConfig.url,
     siteName: siteConfig.name,
     locale: 'en_US',

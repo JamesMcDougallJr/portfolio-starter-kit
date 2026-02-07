@@ -2,6 +2,7 @@
 
 import type { HistoricalEvent } from '../types';
 import { formatDate } from '../utils/date-utils';
+import { ExpandableText } from '../../components/expandable-text';
 
 interface EventCardProps {
   event: HistoricalEvent;
@@ -27,12 +28,16 @@ export function EventCard({ event }: EventCardProps) {
           </div>
         )}
       </div>
-      <h4 className="font-medium text-neutral-900 dark:text-neutral-100">
-        {event.title}
-      </h4>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-        {event.description}
-      </p>
+      <ExpandableText
+        text={event.title}
+        maxLines={1}
+        className="font-medium text-neutral-900 dark:text-neutral-100"
+      />
+      <ExpandableText
+        text={event.description}
+        maxLines={3}
+        className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed"
+      />
       {event.imageUrl && (
         <img
           src={event.imageUrl}
@@ -42,9 +47,13 @@ export function EventCard({ event }: EventCardProps) {
         />
       )}
       {event.source && (
-        <p className="text-xs text-neutral-500 dark:text-neutral-500 italic mt-2">
-          Source: {event.source}
-        </p>
+        <div className="mt-2">
+          <ExpandableText
+            text={`Source: ${event.source}`}
+            maxLines={1}
+            className="text-xs text-neutral-500 dark:text-neutral-500 italic"
+          />
+        </div>
       )}
     </div>
   );
