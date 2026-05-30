@@ -14,10 +14,14 @@ export default async function sitemap() {
     lastModified: post.publishedAt,
   }))
 
-  const routes = ['', '/blog', '/map', '/tutoring'].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date().toISOString().split('T')[0],
-  }))
+  const projectRoutes = ['/projects', '/projects/smollama']
+
+  const routes = ['', '/blog', '/map', '/tutoring', ...projectRoutes].map(
+    (route) => ({
+      url: `${baseUrl}${route}`,
+      lastModified: new Date().toISOString().split('T')[0],
+    })
+  )
 
   return [...routes, ...blogs]
 }
