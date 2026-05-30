@@ -1,16 +1,16 @@
 import { BlogPosts } from 'app/components/posts'
 import { Suspense, lazy } from 'react'
+import Image from 'next/image'
 import { LoadingSpinner } from './components/loading-spinner'
 import { siteConfig } from './lib/seo'
 import { baseUrl } from './sitemap'
 
-const ObjectDetectionPlayer = lazy(
-  () =>
-    import('./components/object_detector/object_detection_player').then(
-      (mod) => ({
-        default: mod.ObjectDetectionPlayer,
-      })
-    )
+const ObjectDetectionPlayer = lazy(() =>
+  import('./components/object_detector/object_detection_player').then(
+    (mod) => ({
+      default: mod.ObjectDetectionPlayer,
+    })
+  )
 )
 
 export default function Page(): JSX.Element {
@@ -45,6 +45,14 @@ export default function Page(): JSX.Element {
         }}
       />
       <section className="mb-12">
+        <Image
+          src="/profile.jpeg"
+          alt="James McDougall"
+          width={160}
+          height={160}
+          className="rounded-full mb-6 border-2 border-slate-200 dark:border-slate-700"
+          priority
+        />
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
           James McDougall
         </h1>
@@ -53,11 +61,10 @@ export default function Page(): JSX.Element {
         </p>
         <p className="text-base text-slate-600 dark:text-slate-400 max-w-2xl">
           I&apos;m a software engineer in the defense industry building
-          AI-powered solutions. Beyond my work
-          in defense, I help small businesses integrate AI into their workflows
-          in practical ways, and tutor students in computer science, history,
-          and English—developing well-rounded critical thinkers ready to make an
-          impact.
+          AI-powered solutions. Beyond my work in defense, I help small
+          businesses integrate AI into their workflows in practical ways, and
+          tutor students in computer science, history, and English—developing
+          well-rounded critical thinkers ready to make an impact.
         </p>
       </section>
 

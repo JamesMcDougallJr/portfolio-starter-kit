@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export const metadata = {
   title: 'Tutoring',
   description:
@@ -106,6 +108,27 @@ export default function Page() {
           responsibly. My goal is to prepare students to engage with the world
           as capable, ethical citizens who can make a meaningful impact.
         </p>
+      </div>
+
+      <div className="flex items-center gap-6 mb-10 p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50">
+        <Image
+          src="/profile.jpeg"
+          alt="James McDougall"
+          width={128}
+          height={128}
+          className="rounded-full border-2 border-slate-200 dark:border-slate-700 flex-shrink-0"
+        />
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">
+            Meet Your Tutor
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            I&apos;m James, a software engineer working in defense and AI. I
+            bring real-world technical experience to every session, helping
+            students connect what they&apos;re learning to how it&apos;s
+            actually used in industry.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-10">
