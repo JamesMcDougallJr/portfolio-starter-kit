@@ -14,7 +14,7 @@ const navItems = {
   '/tutoring': {
     name: 'tutoring',
   },
-  '/map': {
+  'https://historical-map-omega.vercel.app/map': {
     name: 'map',
   },
 }
@@ -29,7 +29,13 @@ function FlameIcon({ className = '' }: { className?: string }) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="nav-flame-gradient" x1="50%" y1="100%" x2="50%" y2="0%">
+        <linearGradient
+          id="nav-flame-gradient"
+          x1="50%"
+          y1="100%"
+          x2="50%"
+          y2="0%"
+        >
           <stop offset="0%" stopColor="#3b82f6" />
           <stop offset="50%" stopColor="#8b5cf6" />
           <stop offset="100%" stopColor="#f97316" />
@@ -75,15 +81,34 @@ export function Navbar(): JSX.Element {
               <FlameIcon />
             </Link>
             {Object.entries(navItems).map(([path, { name }]) => {
-              const active = isActive(path)
+              const isExternal = path.startsWith('http')
+              const active = !isExternal && isActive(path)
+              const className = `transition-all hover:text-primary-color hover:scale-105 duration-200 flex align-middle relative py-1 px-2 m-1 ${
+                active
+                  ? 'text-primary-color font-medium'
+                  : 'text-slate-600 dark:text-slate-400'
+              }`
+
+              if (isExternal) {
+                return (
+                  <a
+                    key={path}
+                    href={path}
+                    className={className}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    role="listitem"
+                  >
+                    {name}
+                  </a>
+                )
+              }
+
               return (
                 <Link
                   key={path}
                   href={path}
-                  className={`transition-all hover:text-primary-color hover:scale-105 duration-200 flex align-middle relative py-1 px-2 m-1 ${active
-                    ? 'text-primary-color font-medium'
-                    : 'text-slate-600 dark:text-slate-400'
-                    }`}
+                  className={className}
                   aria-current={active ? 'page' : undefined}
                   role="listitem"
                 >
