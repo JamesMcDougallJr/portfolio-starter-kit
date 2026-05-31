@@ -22,12 +22,15 @@ export function generateStaticParams() {
   return projects.map((project) => ({ slug: project.slug }))
 }
 
-export function generateMetadata({
+type Params = Promise<{ slug: string }>
+
+export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
-}): Metadata {
-  const project = getProject(params.slug)
+  params: Params
+}): Promise<Metadata> {
+  const { slug } = await params
+  const project = getProject(slug)
   if (!project) return { title: 'Project Not Found' }
 
   return {
@@ -36,12 +39,9 @@ export function generateMetadata({
   }
 }
 
-export default function ProjectPage({
-  params,
-}: {
-  params: { slug: string }
-}): JSX.Element {
-  const project = getProject(params.slug)
+export default async function ProjectPage({ params }: { params: Params }) {
+  const { slug } = await params
+  const project = getProject(slug)
   if (!project) notFound()
 
   const groupedTech = project.techStack.reduce(
