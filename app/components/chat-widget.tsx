@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, useState } from 'react'
+import { streamAgentReply } from '../lib/agent-stream'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -60,51 +61,6 @@ function CloseIcon() {
   )
 }
 
-async function streamAgentReply(
-  prompt: string,
-  onDelta: (text: string) => void,
-  signal: AbortSignal
-): Promise<void> {
-  const res = await fetch('/agent/invocations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
-    signal,
-  })
-
-  if (!res.ok || !res.body) {
-    throw new Error(`Agent request failed (${res.status})`)
-  }
-
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-
-    const lines = buffer.split('\n')
-    buffer = lines.pop() ?? ''
-
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue
-      let payload: unknown
-      try {
-        payload = JSON.parse(line.slice('data: '.length))
-      } catch {
-        continue
-      }
-      const event = (payload as { event?: Record<string, unknown> })?.event
-      const delta = (
-        event?.contentBlockDelta as { delta?: { text?: string } } | undefined
-      )?.delta?.text
-      if (delta) onDelta(delta)
-    }
-  }
-}
-
 export function ChatWidget(): JSX.Element {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -150,9 +106,11 @@ export function ChatWidget(): JSX.Element {
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
     try {
-      await streamAgentReply(
+      await streamAgentReply({
+        invokePath: '/agent/invocations',
         prompt,
-        (delta) => {
+        signal: controller.signal,
+        onDelta: (delta) => {
           setMessages((prev) => {
             const next = [...prev]
             const last = next[next.length - 1]
@@ -162,8 +120,7 @@ export function ChatWidget(): JSX.Element {
             return next
           })
         },
-        controller.signal
-      )
+      })
     } catch (err) {
       const timedOut = controller.signal.aborted
       setError(
