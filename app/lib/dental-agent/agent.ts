@@ -22,6 +22,7 @@ export interface RunState {
   holdId?: string
   appointmentId?: string
   checklist?: Checklist
+  insuranceVerificationAttempts?: number
 }
 
 interface RunTurnArgs {
@@ -100,11 +101,36 @@ async function ensureRegistered(
   }
 }
 
+// Insurance fallback is deterministic too — after repeated verification
+// failures we stop leaving "retry or self-pay?" to the model's read of a
+// possibly-ambiguous patient reply (which was observed to spiral into
+// invented excuses instead of ever converging), and just elect self-pay
+// ourselves so the conversation can't stall indefinitely.
+const MAX_INSURANCE_ATTEMPTS = 2
+
+async function ensureInsuranceResolved(state: RunState, dentalApi: DentalApiConfig): Promise<void> {
+  if (!state.patientId) return
+  if (state.insuranceStatus === 'active' || state.insuranceStatus === 'self_pay') return
+  if ((state.insuranceVerificationAttempts ?? 0) < MAX_INSURANCE_ATTEMPTS) return
+
+  const verifyInsurance = tools.verify_insurance
+  if (!verifyInsurance) return
+
+  const result = (await verifyInsurance.run(
+    { patient_id: state.patientId, self_pay: true },
+    dentalApi
+  )) as Record<string, unknown>
+  if (result && !('error' in result) && typeof result.status === 'string') {
+    state.insuranceStatus = result.status
+    state.insuranceVerificationAttempts = 0
+  }
+}
+
 function buildStateSummary(state: RunState): string {
   return [
     `patient_id: ${state.patientId ?? 'none yet'}`,
     `patient_on_file: ${state.patientOnFile === undefined ? 'n/a' : state.patientOnFile}`,
-    `insurance: ${state.insuranceStatus ?? 'not verified yet'}`,
+    `insurance: ${state.insuranceStatus ?? 'not verified yet'}${state.insuranceVerificationAttempts ? ` (${state.insuranceVerificationAttempts} failed attempt(s))` : ''}`,
     `service: ${state.serviceCode ?? 'not chosen yet'}`,
     `hold_id: ${state.holdId ?? 'none yet'}`,
     `appointment_id: ${state.appointmentId ?? 'not booked yet'}`,
@@ -125,7 +151,17 @@ function buildTurnDirective(state: RunState, checklist: Checklist): string {
     return `Do not ask any further questions. Summarize back to the patient exactly what you have: ${renderKnownValues(checklist)}. Ask them to confirm before you proceed. Do not call search_availability, create_hold, or book_appointment yet.`
   }
 
-  return `The patient has confirmed. Resolve a real service code via get_services for "${checklist.visit_reason.value}" before calling search_availability — never guess or invent one. If using insurance, resolve a real payer_id via get_payers for "${checklist.insurance_or_self_pay.value}"; if no matching payer exists, tell the patient honestly and offer self-pay instead of proceeding as if it succeeded. Then verify_insurance or self_pay, then search_availability. Only ever state specific times, providers, or slots that came back from a search_availability result you just received this turn — never invent, guess, or reuse stale-sounding availability.
+  const insuranceResolved =
+    state.insuranceStatus === 'active' || state.insuranceStatus === 'self_pay'
+  const insuranceFailedOnce =
+    !insuranceResolved &&
+    (state.insuranceStatus === 'invalid_member' || state.insuranceStatus === 'not_accepted')
+
+  const insuranceInstruction = insuranceResolved
+    ? `Insurance is already resolved (status: ${state.insuranceStatus}) — do not call get_payers or verify_insurance again this run.`
+    : `If using insurance, resolve a real payer_id via get_payers for "${checklist.insurance_or_self_pay.value}"; if no matching payer exists, tell the patient honestly and offer self-pay instead of proceeding as if it succeeded. Then call verify_insurance or self_pay.${insuranceFailedOnce ? ` Insurance verification already failed once with the details on file (${state.insuranceStatus}) — do not silently retry verify_insurance with the exact same payer_id/member_id/date_of_birth; only call it again if the patient's latest message actually supplied different insurance details, otherwise tell them you'll continue on a self-pay basis and call verify_insurance with self_pay: true.` : ''}`
+
+  return `The patient has confirmed. Resolve a real service code via get_services for "${checklist.visit_reason.value}" before calling search_availability — never guess or invent one. ${insuranceInstruction} Only ever state specific times, providers, or slots that came back from a search_availability result you just received this turn — never invent, guess, or reuse stale-sounding availability.
 
 When calling search_availability, default the "to" param to about 7 days out if the patient hasn't stated a preferred timeframe (respect whatever they did specify otherwise, even if it's further out or narrower). In your reply, present a concise handful of the real returned options (day/time and provider) so the patient can just pick one — then explicitly invite them to ask for a different day, time of day, or a wider window instead if none of those work.`
 }
@@ -144,7 +180,13 @@ function applyStateEffects(
       if (typeof r.id === 'string') state.patientId = r.id
       break
     case 'verify_insurance':
-      if (typeof r.status === 'string') state.insuranceStatus = r.status
+      if (typeof r.status === 'string') {
+        state.insuranceStatus = r.status
+        state.insuranceVerificationAttempts =
+          r.status === 'invalid_member' || r.status === 'not_accepted'
+            ? (state.insuranceVerificationAttempts ?? 0) + 1
+            : 0
+      }
       break
     case 'search_availability':
       if (typeof args.service === 'string') state.serviceCode = args.service as string
@@ -178,6 +220,7 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
   state.checklist = checklist
 
   await ensureRegistered(state, checklist, dentalApi)
+  await ensureInsuranceResolved(state, dentalApi)
 
   const turnDirective = buildTurnDirective(state, checklist)
 
@@ -236,7 +279,18 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
           // leave empty; the model will see an empty-args tool result and can retry
         }
         try {
-          result = await toolDef.run(parsedArgs, dentalApi)
+          // Insurance status can't regress once resolved: even if the model
+          // calls verify_insurance again (e.g. re-deriving stale checklist
+          // details after a confusing patient reply), a fresh failed lookup
+          // must never overwrite an already-successful resolution.
+          if (
+            toolCall.function.name === 'verify_insurance' &&
+            (state.insuranceStatus === 'active' || state.insuranceStatus === 'self_pay')
+          ) {
+            result = { status: state.insuranceStatus }
+          } else {
+            result = await toolDef.run(parsedArgs, dentalApi)
+          }
         } catch (err) {
           result = {
             error: {
