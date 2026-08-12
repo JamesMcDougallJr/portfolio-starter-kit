@@ -88,6 +88,9 @@
   .text-primary-color {
     color: var(--color-primary);
   }
+  .bg-primary-color {
+    background-color: var(--color-primary);
+  }
   .text-accent {
     color: var(--color-accent);
   }
