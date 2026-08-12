@@ -2,18 +2,26 @@ import OpenAI from 'openai'
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 import { tools, toolSchemas, type DentalApiConfig } from './tools'
 import { buildSystemPrompt } from './system-prompt'
+import {
+  extractChecklist,
+  getNextGatheringDirective,
+  renderKnownValues,
+  hasCoreIdentity,
+  hasNewPatientExtras,
+  type Checklist,
+  type HistoryTurn,
+} from './checklist'
+
+export type { HistoryTurn } from './checklist'
 
 export interface RunState {
   patientId?: string
+  patientOnFile?: boolean
   insuranceStatus?: string
   serviceCode?: string
   holdId?: string
   appointmentId?: string
-}
-
-export interface HistoryTurn {
-  role: 'patient' | 'agent'
-  content: string
+  checklist?: Checklist
 }
 
 interface RunTurnArgs {
@@ -32,16 +40,94 @@ interface RunTurnResult {
 }
 
 const MAX_TOOL_ITERATIONS = 6
-const STATUS_MARKER = 'STATUS_COMPLETE'
+
+// Registration is deterministic — our own code calls it at the precise
+// moment the state machine allows, rather than leaving it to the model's
+// judgment of "have I gathered enough yet."
+async function ensureRegistered(
+  state: RunState,
+  checklist: Checklist,
+  dentalApi: DentalApiConfig
+): Promise<void> {
+  if (state.patientId) return
+  if (!hasCoreIdentity(checklist)) return
+
+  const registerPatient = tools.register_patient
+  if (!registerPatient) return
+
+  const core = {
+    first_name: checklist.first_name.value,
+    last_name: checklist.last_name.value,
+    date_of_birth: checklist.date_of_birth.value,
+    phone: checklist.phone.value,
+    email: checklist.email.value,
+  }
+
+  if (checklist.patient_type.value === 'new') {
+    if (!hasNewPatientExtras(checklist)) return
+    const result = (await registerPatient.run(
+      {
+        status: 'new',
+        ...core,
+        address_line1: checklist.address_line1.value,
+        city: checklist.city.value,
+        state: checklist.state.value,
+        zip: checklist.zip.value,
+        emergency_contact_name: checklist.emergency_contact_name.value,
+        emergency_contact_phone: checklist.emergency_contact_phone.value,
+      },
+      dentalApi
+    )) as Record<string, unknown>
+    if (result && !('error' in result) && typeof result.id === 'string') {
+      state.patientId = result.id
+    }
+    return
+  }
+
+  // Returning: probe with no address/emergency-contact fields. There's no
+  // patient search endpoint in this API — this create call is the only
+  // available signal. If the response comes back with on-file address data
+  // we never sent, this patient is genuinely known; if it comes back null,
+  // treat them like a new patient for the remaining questions (the record
+  // already exists either way — POST /patients always succeeds).
+  const result = (await registerPatient.run(
+    { status: 'returning', ...core },
+    dentalApi
+  )) as Record<string, unknown>
+  if (result && !('error' in result) && typeof result.id === 'string') {
+    state.patientId = result.id
+    state.patientOnFile = Boolean(result.address_line1)
+  }
+}
 
 function buildStateSummary(state: RunState): string {
   return [
     `patient_id: ${state.patientId ?? 'none yet'}`,
+    `patient_on_file: ${state.patientOnFile === undefined ? 'n/a' : state.patientOnFile}`,
     `insurance: ${state.insuranceStatus ?? 'not verified yet'}`,
     `service: ${state.serviceCode ?? 'not chosen yet'}`,
     `hold_id: ${state.holdId ?? 'none yet'}`,
     `appointment_id: ${state.appointmentId ?? 'not booked yet'}`,
   ].join('\n')
+}
+
+function buildTurnDirective(state: RunState, checklist: Checklist): string {
+  if (state.appointmentId) {
+    return 'The appointment is already booked and confirmed. Help with any follow-up requests (changes, cancellations, questions) or wrap up politely — do not re-book.'
+  }
+
+  const nextGathering = getNextGatheringDirective(checklist, state.patientOnFile)
+  if (nextGathering) {
+    return `Ask only: ${nextGathering}. Do not ask about or mention anything else this turn.`
+  }
+
+  if (!checklist.patient_confirmed_booking.value) {
+    return `Do not ask any further questions. Summarize back to the patient exactly what you have: ${renderKnownValues(checklist)}. Ask them to confirm before you proceed. Do not call search_availability, create_hold, or book_appointment yet.`
+  }
+
+  return `The patient has confirmed. Resolve a real service code via get_services for "${checklist.visit_reason.value}" before calling search_availability — never guess or invent one. If using insurance, resolve a real payer_id via get_payers for "${checklist.insurance_or_self_pay.value}"; if no matching payer exists, tell the patient honestly and offer self-pay instead of proceeding as if it succeeded. Then verify_insurance or self_pay, then search_availability. Only ever state specific times, providers, or slots that came back from a search_availability result you just received this turn — never invent, guess, or reuse stale-sounding availability.
+
+When calling search_availability, default the "to" param to about 7 days out if the patient hasn't stated a preferred timeframe (respect whatever they did specify otherwise, even if it's further out or narrower). In your reply, present a concise handful of the real returned options (day/time and provider) so the patient can just pick one — then explicitly invite them to ask for a different day, time of day, or a wider window instead if none of those work.`
 }
 
 function applyStateEffects(
@@ -81,10 +167,27 @@ function applyStateEffects(
 export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
   const { openaiKey, history, userMessage, dentalApi, model } = args
   const state: RunState = { ...args.state }
+
+  const checklist = await extractChecklist({
+    openaiKey,
+    history,
+    userMessage,
+    previous: state.checklist,
+    model,
+  })
+  state.checklist = checklist
+
+  await ensureRegistered(state, checklist, dentalApi)
+
+  const turnDirective = buildTurnDirective(state, checklist)
+
   const client = new OpenAI({ apiKey: openaiKey })
 
   const messages: ChatCompletionMessageParam[] = [
-    { role: 'system', content: buildSystemPrompt(buildStateSummary(state)) },
+    {
+      role: 'system',
+      content: buildSystemPrompt(buildStateSummary(state), turnDirective),
+    },
     ...history.map(
       (h): ChatCompletionMessageParam => ({
         role: h.role === 'patient' ? 'user' : 'assistant',
@@ -152,7 +255,10 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
       })
     }
 
-    messages[0] = { role: 'system', content: buildSystemPrompt(buildStateSummary(state)) }
+    messages[0] = {
+      role: 'system',
+      content: buildSystemPrompt(buildStateSummary(state), turnDirective),
+    }
   }
 
   if (!finalContent) {
@@ -160,15 +266,9 @@ export async function runTurn(args: RunTurnArgs): Promise<RunTurnResult> {
       "Sorry, I'm having trouble processing that — could you repeat your last message?"
   }
 
-  const trimmed = finalContent.trim()
-  const isComplete = trimmed.endsWith(STATUS_MARKER)
-  const message = isComplete
-    ? trimmed.slice(0, -STATUS_MARKER.length).trim()
-    : trimmed
-
   return {
-    message: message || trimmed,
-    status: isComplete ? 'complete' : 'continue',
+    message: finalContent.trim(),
+    status: state.appointmentId ? 'complete' : 'continue',
     newState: state,
   }
 }
