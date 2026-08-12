@@ -29,6 +29,17 @@ const nextConfig = {
     optimizePackageImports: ['ol', '@mediapipe/tasks-vision'],
   },
 
+  // Proxy the local Q&A agent's AgentCore dev server (127.0.0.1:8080 only)
+  // so the browser never talks to it directly.
+  async rewrites() {
+    return [
+      {
+        source: '/agent/:path*',
+        destination: 'http://127.0.0.1:8080/:path*',
+      },
+    ]
+  },
+
   // Headers for security and caching
   async headers() {
     return [
