@@ -71,7 +71,7 @@ export default function Page(): JSX.Element {
       {/* Service Cards */}
       <section className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-6">
         <a
-          href="https://calendly.com/jamesmcdougalljr/30min"
+          href="https://calendly.com/jamesimcdougalljr/30min"
           target="_blank"
           rel="noopener noreferrer"
           className="group relative p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:shadow-lg transition-all duration-300"

@@ -1,0 +1,382 @@
+[2026-02-25T03:48:02.527Z] Server starting
+{
+  "pid": 66636,
+  "startTime": "2026-02-25T03:48:02.526Z"
+}
+---
+[2026-02-25T03:48:02.532Z] Tools registered
+{
+  "toolCount": 15
+}
+---
+[2026-02-25T03:48:02.532Z] Creating stdio transport
+{}
+---
+[2026-02-25T03:48:03.563Z] Service initialization error
+{}
+---
+[2026-02-25T03:48:03.564Z] Connecting transport
+{}
+---
+[2026-02-25T03:48:03.564Z] Server connected and ready
+{
+  "pid": 66636
+}
+---
+[2026-02-25T03:48:03.567Z] Server stats [server-ready]
+{
+  "uptime": "1s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "48MB",
+    "heapTotal": "75MB",
+    "rss": "135MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:00.128Z] SIGHUP received but ignored
+{}
+---
+[2026-02-25T04:45:00.290Z] SIGHUP received but ignored
+{}
+---
+[2026-02-25T04:45:00.310Z] Server stats [sighup-ignored]
+{
+  "uptime": "3418s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "15MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:00.312Z] Server stats [sighup-ignored]
+{
+  "uptime": "3418s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "15MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:00.726Z] SIGINT received but ignored - lifecycle managed by Claude Code
+{}
+---
+[2026-02-25T04:45:00.727Z] Server stats [sigint-ignored]
+{
+  "uptime": "3418s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "15MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:01.548Z] Server stats [shutdown-SIGTERM]
+{
+  "uptime": "3419s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:01.564Z] STDIN ended
+{}
+---
+[2026-02-25T04:45:01.572Z] STDIN closed - client disconnected
+{}
+---
+[2026-02-25T04:45:01.581Z] Shutdown complete
+{
+  "signal": "SIGTERM"
+}
+---
+[2026-02-25T04:45:01.581Z] Server stats [stdin-end]
+{
+  "uptime": "3419s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "18MB"
+  },
+  "pid": 66636
+}
+---
+[2026-02-25T04:45:01.581Z] Server stats [stdin-close]
+{
+  "uptime": "3419s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "18MB"
+  },
+  "pid": 66636
+}
+---
+[2026-05-30T00:29:30.995Z] Server starting
+{
+  "pid": 4198,
+  "startTime": "2026-05-30T00:29:30.987Z"
+}
+---
+[2026-05-30T00:29:30.999Z] Tools registered
+{
+  "toolCount": 15
+}
+---
+[2026-05-30T00:29:30.999Z] Creating stdio transport
+{}
+---
+[2026-05-30T00:29:31.721Z] Service initialization error
+{}
+---
+[2026-05-30T00:29:31.722Z] Connecting transport
+{}
+---
+[2026-05-30T00:29:31.722Z] Server connected and ready
+{
+  "pid": 4198
+}
+---
+[2026-05-30T00:29:31.724Z] Server stats [server-ready]
+{
+  "uptime": "1s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "48MB",
+    "heapTotal": "75MB",
+    "rss": "125MB"
+  },
+  "pid": 4198
+}
+---
+[2026-05-30T01:25:54.303Z] Server starting
+{
+  "pid": 7933,
+  "startTime": "2026-05-30T01:25:54.298Z"
+}
+---
+[2026-05-30T01:25:54.308Z] Tools registered
+{
+  "toolCount": 15
+}
+---
+[2026-05-30T01:25:54.308Z] Creating stdio transport
+{}
+---
+[2026-05-30T01:25:54.977Z] Service initialization error
+{}
+---
+[2026-05-30T01:25:54.978Z] Connecting transport
+{}
+---
+[2026-05-30T01:25:54.978Z] Server connected and ready
+{
+  "pid": 7933
+}
+---
+[2026-05-30T01:25:54.980Z] Server stats [server-ready]
+{
+  "uptime": "1s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "48MB",
+    "heapTotal": "74MB",
+    "rss": "138MB"
+  },
+  "pid": 7933
+}
+---
+[2026-06-09T03:20:53.418Z] SIGHUP received but ignored
+{}
+---
+[2026-06-09T03:20:53.418Z] SIGHUP received but ignored
+{}
+---
+[2026-06-09T03:20:53.454Z] SIGHUP received but ignored
+{}
+---
+[2026-06-09T03:20:53.455Z] SIGHUP received but ignored
+{}
+---
+[2026-06-09T03:20:53.463Z] Server stats [sighup-ignored]
+{
+  "uptime": "870899s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 7933
+}
+---
+[2026-06-09T03:20:53.466Z] Server stats [sighup-ignored]
+{
+  "uptime": "870899s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 7933
+}
+---
+[2026-06-09T03:20:53.465Z] Server stats [sighup-ignored]
+{
+  "uptime": "874282s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "13MB"
+  },
+  "pid": 4198
+}
+---
+[2026-06-09T03:20:53.466Z] Server stats [sighup-ignored]
+{
+  "uptime": "874282s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 4198
+}
+---
+[2026-06-09T03:20:53.474Z] SIGINT received but ignored - lifecycle managed by Claude Code
+{}
+---
+[2026-06-09T03:20:53.474Z] Server stats [sigint-ignored]
+{
+  "uptime": "874282s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 4198
+}
+---
+[2026-06-09T03:20:53.475Z] SIGINT received but ignored - lifecycle managed by Claude Code
+{}
+---
+[2026-06-09T03:20:53.475Z] Server stats [sigint-ignored]
+{
+  "uptime": "870899s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "14MB"
+  },
+  "pid": 7933
+}
+---
+[2026-06-09T03:20:53.643Z] Server stats [shutdown-SIGTERM]
+{
+  "uptime": "870899s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "16MB"
+  },
+  "pid": 7933
+}
+---
+[2026-06-09T03:20:53.647Z] Shutdown complete
+{
+  "signal": "SIGTERM"
+}
+---
+[2026-06-09T03:20:53.648Z] Server stats [shutdown-SIGTERM]
+{
+  "uptime": "874283s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "44MB",
+    "heapTotal": "47MB",
+    "rss": "16MB"
+  },
+  "pid": 4198
+}
+---
+[2026-06-09T03:20:53.652Z] Shutdown complete
+{
+  "signal": "SIGTERM"
+}
+---
+[2026-08-05T23:09:22.580Z] Server starting
+{
+  "pid": 57445,
+  "startTime": "2026-08-05T23:09:22.575Z"
+}
+---
+[2026-08-05T23:09:22.587Z] Tools registered
+{
+  "toolCount": 15
+}
+---
+[2026-08-05T23:09:22.587Z] Creating stdio transport
+{}
+---
+[2026-08-05T23:09:25.165Z] Service initialization error
+{}
+---
+[2026-08-05T23:09:25.166Z] Connecting transport
+{}
+---
+[2026-08-05T23:09:25.166Z] Server connected and ready
+{
+  "pid": 57445
+}
+---
+[2026-08-05T23:09:25.170Z] Server stats [server-ready]
+{
+  "uptime": "3s",
+  "toolCallCount": 0,
+  "lastToolCall": null,
+  "memory": {
+    "heapUsed": "48MB",
+    "heapTotal": "74MB",
+    "rss": "129MB"
+  },
+  "pid": 57445
+}
+---
