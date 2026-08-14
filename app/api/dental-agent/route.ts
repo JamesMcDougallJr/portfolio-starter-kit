@@ -18,6 +18,11 @@ interface TurnRequest {
   resources: {
     dental_api: DentalApiConfig
   }
+  // Additive, outside the protocol-defined shape — the evaluator never
+  // sends this, so its requests/responses are unaffected. Lets us (or
+  // whoever's testing) supply a fresh OpenAI key from the browser if the
+  // server-configured one expires or gets pulled mid-interview.
+  openai_api_key?: string
 }
 
 interface TurnResponse {
@@ -51,7 +56,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const cached = await kvGet<TurnResponse>(cacheKey)
     if (cached) return NextResponse.json(cached)
 
-    const openaiKey = process.env.OPENAI_API_KEY
+    const openaiKey = turn.openai_api_key || process.env.OPENAI_API_KEY
     if (!openaiKey) {
       return NextResponse.json({
         protocol_version,

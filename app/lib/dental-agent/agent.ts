@@ -14,6 +14,13 @@ import {
 
 export type { HistoryTurn } from './checklist'
 
+export interface SlotOption {
+  slot_id: string
+  starts_at: string
+  duration_minutes?: number
+  provider?: { id?: string; name?: string; type?: string }
+}
+
 export interface RunState {
   patientId?: string
   patientOnFile?: boolean
@@ -23,6 +30,12 @@ export interface RunState {
   appointmentId?: string
   checklist?: Checklist
   insuranceVerificationAttempts?: number
+  // The exact slots most recently presented to the patient. Tool results
+  // never survive into a later turn's `messages` array (it's rebuilt fresh
+  // from visible history text each turn), so without persisting the real
+  // slot_id here the model has no way to book what it already offered and
+  // is forced to search again indefinitely — this is what fixes that.
+  presentedSlots?: SlotOption[]
 }
 
 interface RunTurnArgs {
@@ -134,6 +147,15 @@ function buildStateSummary(state: RunState): string {
     `service: ${state.serviceCode ?? 'not chosen yet'}`,
     `hold_id: ${state.holdId ?? 'none yet'}`,
     `appointment_id: ${state.appointmentId ?? 'not booked yet'}`,
+    ...(state.presentedSlots && state.presentedSlots.length > 0
+      ? [
+          'previously_presented_slots (use these exact slot_id values for create_hold — do not search again just to re-find one of these):',
+          ...state.presentedSlots.map(
+            (s) =>
+              `  - slot_id=${s.slot_id} starts_at=${s.starts_at}${s.provider?.name ? ` provider=${s.provider.name}` : ''}`
+          ),
+        ]
+      : []),
   ].join('\n')
 }
 
@@ -149,6 +171,10 @@ function buildTurnDirective(state: RunState, checklist: Checklist): string {
 
   if (!checklist.patient_confirmed_booking.value) {
     return `Do not ask any further questions. Summarize back to the patient exactly what you have: ${renderKnownValues(checklist)}. Ask them to confirm before you proceed. Do not call search_availability, create_hold, or book_appointment yet.`
+  }
+
+  if (state.presentedSlots && state.presentedSlots.length > 0 && !state.holdId) {
+    return `You already presented the patient the slot(s) listed under "previously_presented_slots" in Known state above and are waiting on their answer. If their latest message picks one of those (including a plain "yes"/"that works" when only one was offered), call create_hold using that exact slot_id from Known state — do not call search_availability again, the slot_id you need is already there. Once create_hold succeeds, immediately call book_appointment with the resulting hold_id. Only call search_availability again if the patient explicitly asked for something different than what was offered.`
   }
 
   const insuranceResolved =
@@ -190,9 +216,27 @@ function applyStateEffects(
       break
     case 'search_availability':
       if (typeof args.service === 'string') state.serviceCode = args.service as string
+      if (Array.isArray(r.availability)) {
+        state.presentedSlots = (r.availability as Record<string, unknown>[])
+          .slice(0, 5)
+          .filter((s): s is Record<string, unknown> => typeof s.slot_id === 'string')
+          .map((s) => ({
+            slot_id: s.slot_id as string,
+            starts_at: typeof s.starts_at === 'string' ? s.starts_at : '',
+            duration_minutes:
+              typeof s.duration_minutes === 'number' ? s.duration_minutes : undefined,
+            provider:
+              s.provider && typeof s.provider === 'object'
+                ? (s.provider as SlotOption['provider'])
+                : undefined,
+          }))
+      }
       break
     case 'create_hold':
-      if (typeof r.hold_id === 'string') state.holdId = r.hold_id
+      if (typeof r.hold_id === 'string') {
+        state.holdId = r.hold_id
+        state.presentedSlots = undefined
+      }
       break
     case 'book_appointment':
       if (typeof r.id === 'string') state.appointmentId = r.id
